@@ -1,0 +1,2 @@
+float64 look_ahead_dist
+float64 sigma

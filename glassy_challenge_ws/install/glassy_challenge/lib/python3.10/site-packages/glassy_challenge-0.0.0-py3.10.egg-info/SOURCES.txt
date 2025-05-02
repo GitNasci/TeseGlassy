@@ -1,0 +1,16 @@
+package.xml
+setup.cfg
+setup.py
+../../build/glassy_challenge/glassy_challenge.egg-info/PKG-INFO
+../../build/glassy_challenge/glassy_challenge.egg-info/SOURCES.txt
+../../build/glassy_challenge/glassy_challenge.egg-info/dependency_links.txt
+../../build/glassy_challenge/glassy_challenge.egg-info/entry_points.txt
+../../build/glassy_challenge/glassy_challenge.egg-info/requires.txt
+../../build/glassy_challenge/glassy_challenge.egg-info/top_level.txt
+../../build/glassy_challenge/glassy_challenge.egg-info/zip-safe
+glassy_challenge/__init__.py
+glassy_challenge/glassy_challenge.py
+resource/glassy_challenge
+test/test_copyright.py
+test/test_flake8.py
+test/test_pep257.py

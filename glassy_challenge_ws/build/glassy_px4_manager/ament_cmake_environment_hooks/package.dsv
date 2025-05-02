@@ -1,0 +1,4 @@
+source;share/glassy_px4_manager/local_setup.bash
+source;share/glassy_px4_manager/local_setup.dsv
+source;share/glassy_px4_manager/local_setup.sh
+source;share/glassy_px4_manager/local_setup.zsh

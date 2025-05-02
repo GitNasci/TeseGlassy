@@ -1,0 +1,17 @@
+// generated from rosidl_adapter/resource/srv.idl.em
+// with input from glassy_msgs/srv/LosParams.srv
+// generated code does not contain a copyright notice
+
+
+module glassy_msgs {
+  module srv {
+    struct LosParams_Request {
+      double look_ahead_dist;
+
+      double sigma;
+    };
+    struct LosParams_Response {
+      boolean result;
+    };
+  };
+};

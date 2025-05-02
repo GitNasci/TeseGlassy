@@ -1,0 +1,36 @@
+running egg_info
+creating ../../build/glassy_challenge/glassy_challenge.egg-info
+writing ../../build/glassy_challenge/glassy_challenge.egg-info/PKG-INFO
+writing dependency_links to ../../build/glassy_challenge/glassy_challenge.egg-info/dependency_links.txt
+writing entry points to ../../build/glassy_challenge/glassy_challenge.egg-info/entry_points.txt
+writing requirements to ../../build/glassy_challenge/glassy_challenge.egg-info/requires.txt
+writing top-level names to ../../build/glassy_challenge/glassy_challenge.egg-info/top_level.txt
+writing manifest file '../../build/glassy_challenge/glassy_challenge.egg-info/SOURCES.txt'
+reading manifest file '../../build/glassy_challenge/glassy_challenge.egg-info/SOURCES.txt'
+writing manifest file '../../build/glassy_challenge/glassy_challenge.egg-info/SOURCES.txt'
+running build
+running build_py
+creating /home/diogo/MIR_Project_2024/glassy_challenge_ws/build/glassy_challenge/build
+creating /home/diogo/MIR_Project_2024/glassy_challenge_ws/build/glassy_challenge/build/lib
+creating /home/diogo/MIR_Project_2024/glassy_challenge_ws/build/glassy_challenge/build/lib/glassy_challenge
+copying glassy_challenge/__init__.py -> /home/diogo/MIR_Project_2024/glassy_challenge_ws/build/glassy_challenge/build/lib/glassy_challenge
+copying glassy_challenge/glassy_challenge.py -> /home/diogo/MIR_Project_2024/glassy_challenge_ws/build/glassy_challenge/build/lib/glassy_challenge
+running install
+running install_lib
+creating /home/diogo/MIR_Project_2024/glassy_challenge_ws/install/glassy_challenge/lib/python3.10/site-packages/glassy_challenge
+copying /home/diogo/MIR_Project_2024/glassy_challenge_ws/build/glassy_challenge/build/lib/glassy_challenge/__init__.py -> /home/diogo/MIR_Project_2024/glassy_challenge_ws/install/glassy_challenge/lib/python3.10/site-packages/glassy_challenge
+copying /home/diogo/MIR_Project_2024/glassy_challenge_ws/build/glassy_challenge/build/lib/glassy_challenge/glassy_challenge.py -> /home/diogo/MIR_Project_2024/glassy_challenge_ws/install/glassy_challenge/lib/python3.10/site-packages/glassy_challenge
+byte-compiling /home/diogo/MIR_Project_2024/glassy_challenge_ws/install/glassy_challenge/lib/python3.10/site-packages/glassy_challenge/__init__.py to __init__.cpython-310.pyc
+byte-compiling /home/diogo/MIR_Project_2024/glassy_challenge_ws/install/glassy_challenge/lib/python3.10/site-packages/glassy_challenge/glassy_challenge.py to glassy_challenge.cpython-310.pyc
+running install_data
+creating /home/diogo/MIR_Project_2024/glassy_challenge_ws/install/glassy_challenge/share/ament_index
+creating /home/diogo/MIR_Project_2024/glassy_challenge_ws/install/glassy_challenge/share/ament_index/resource_index
+creating /home/diogo/MIR_Project_2024/glassy_challenge_ws/install/glassy_challenge/share/ament_index/resource_index/packages
+copying resource/glassy_challenge -> /home/diogo/MIR_Project_2024/glassy_challenge_ws/install/glassy_challenge/share/ament_index/resource_index/packages
+copying package.xml -> /home/diogo/MIR_Project_2024/glassy_challenge_ws/install/glassy_challenge/share/glassy_challenge
+running install_egg_info
+Copying ../../build/glassy_challenge/glassy_challenge.egg-info to /home/diogo/MIR_Project_2024/glassy_challenge_ws/install/glassy_challenge/lib/python3.10/site-packages/glassy_challenge-0.0.0-py3.10.egg-info
+running install_scripts
+Installing glassy_challenge script to /home/diogo/MIR_Project_2024/glassy_challenge_ws/install/glassy_challenge/lib/glassy_challenge
+Installing glassy_challenge_analysis script to /home/diogo/MIR_Project_2024/glassy_challenge_ws/install/glassy_challenge/lib/glassy_challenge
+writing list of installed files to '/home/diogo/MIR_Project_2024/glassy_challenge_ws/build/glassy_challenge/install.log'

@@ -1,0 +1,16 @@
+// generated from rosidl_adapter/resource/srv.idl.em
+// with input from glassy_msgs/srv/SetMission.srv
+// generated code does not contain a copyright notice
+
+#include "glassy_msgs/msg/MissionInfo.idl"
+
+module glassy_msgs {
+  module srv {
+    struct SetMission_Request {
+      glassy_msgs::msg::MissionInfo mission_info;
+    };
+    struct SetMission_Response {
+      boolean success;
+    };
+  };
+};

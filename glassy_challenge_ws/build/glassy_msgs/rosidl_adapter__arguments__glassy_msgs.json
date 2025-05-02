@@ -1,0 +1,15 @@
+{
+  "package_name": "glassy_msgs",
+  "non_idl_tuples": [
+    "/home/diogo/MIR_Project_2024/glassy_challenge_ws/src/glassy_msgs:msg/State.msg",
+    "/home/diogo/MIR_Project_2024/glassy_challenge_ws/src/glassy_msgs:msg/Actuators.msg",
+    "/home/diogo/MIR_Project_2024/glassy_challenge_ws/src/glassy_msgs:msg/InnerLoopReferences.msg",
+    "/home/diogo/MIR_Project_2024/glassy_challenge_ws/src/glassy_msgs:msg/PathReferences.msg",
+    "/home/diogo/MIR_Project_2024/glassy_challenge_ws/src/glassy_msgs:msg/MissionInfo.msg",
+    "/home/diogo/MIR_Project_2024/glassy_challenge_ws/src/glassy_msgs:srv/PidGains.srv",
+    "/home/diogo/MIR_Project_2024/glassy_challenge_ws/src/glassy_msgs:srv/SetPath.srv",
+    "/home/diogo/MIR_Project_2024/glassy_challenge_ws/src/glassy_msgs:srv/LosParams.srv",
+    "/home/diogo/MIR_Project_2024/glassy_challenge_ws/src/glassy_msgs:srv/SetLimits.srv",
+    "/home/diogo/MIR_Project_2024/glassy_challenge_ws/src/glassy_msgs:srv/SetMission.srv"
+  ]
+}

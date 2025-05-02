@@ -1,0 +1,79 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-fa2a8918aae8a4838645.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2
+					]
+				}
+			],
+			"name" : "",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "glassy_px4_manager",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "glassy_px4_manager::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-glassy_px4_manager-d78d0e6dcbf01d9a992e.json",
+					"name" : "glassy_px4_manager",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "glassy_px4_manager_uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-glassy_px4_manager_uninstall-998b1b43dc91850906cc.json",
+					"name" : "glassy_px4_manager_uninstall",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-uninstall-7cc31e430f3fbba5bd97.json",
+					"name" : "uninstall",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/diogo/MIR_Project_2024/glassy_challenge_ws/build/glassy_px4_manager",
+		"source" : "/home/diogo/MIR_Project_2024/glassy_challenge_ws/src/glassy_px4_manager"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 3
+	}
+}

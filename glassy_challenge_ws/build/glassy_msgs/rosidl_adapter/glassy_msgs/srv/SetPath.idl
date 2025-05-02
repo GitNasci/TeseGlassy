@@ -1,0 +1,15 @@
+// generated from rosidl_adapter/resource/srv.idl.em
+// with input from glassy_msgs/srv/SetPath.srv
+// generated code does not contain a copyright notice
+
+
+module glassy_msgs {
+  module srv {
+    struct SetPath_Request {
+      string path_file;
+    };
+    struct SetPath_Response {
+      int64 result;
+    };
+  };
+};

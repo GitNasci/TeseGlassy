@@ -1,0 +1,6 @@
+# CMake generated Testfile for 
+# Source directory: /home/diogo/MIR_Project_2024/glassy_challenge_ws/build/glassy_msgs/glassy_msgs__py
+# Build directory: /home/diogo/MIR_Project_2024/glassy_challenge_ws/build/glassy_msgs/glassy_msgs__py
+# 
+# This file includes the relevant testing commands required for 
+# testing this directory and lists subdirectories to be tested as well.

@@ -1,0 +1,2 @@
+/usr/bin/ar qc libGlassyGeneralUtils.a CMakeFiles/GlassyGeneralUtils.dir/src/GlassyGeneralUtils.cpp.o
+/usr/bin/ranlib libGlassyGeneralUtils.a

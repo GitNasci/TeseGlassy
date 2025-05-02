@@ -1,0 +1,26 @@
+[35m[1mConsolidate compiler generated dependencies of target GlassyGeneralUtils[0m
+[100%] Built target GlassyGeneralUtils
+-- Install configuration: ""
+-- Up-to-date: /home/diogo/MIR_Project_2024/glassy_challenge_ws/install/glassy_utils/share/glassy_utils/environment/library_path.sh
+-- Up-to-date: /home/diogo/MIR_Project_2024/glassy_challenge_ws/install/glassy_utils/share/glassy_utils/environment/library_path.dsv
+-- Up-to-date: /home/diogo/MIR_Project_2024/glassy_challenge_ws/install/glassy_utils/include/glassy_utils
+-- Up-to-date: /home/diogo/MIR_Project_2024/glassy_challenge_ws/install/glassy_utils/include/glassy_utils/GlassyGeneralUtils.h
+-- Up-to-date: /home/diogo/MIR_Project_2024/glassy_challenge_ws/install/glassy_utils/lib/libGlassyGeneralUtils.a
+-- Up-to-date: /home/diogo/MIR_Project_2024/glassy_challenge_ws/install/glassy_utils/share/ament_index/resource_index/package_run_dependencies/glassy_utils
+-- Up-to-date: /home/diogo/MIR_Project_2024/glassy_challenge_ws/install/glassy_utils/share/ament_index/resource_index/parent_prefix_path/glassy_utils
+-- Up-to-date: /home/diogo/MIR_Project_2024/glassy_challenge_ws/install/glassy_utils/share/glassy_utils/environment/ament_prefix_path.sh
+-- Up-to-date: /home/diogo/MIR_Project_2024/glassy_challenge_ws/install/glassy_utils/share/glassy_utils/environment/ament_prefix_path.dsv
+-- Up-to-date: /home/diogo/MIR_Project_2024/glassy_challenge_ws/install/glassy_utils/share/glassy_utils/environment/path.sh
+-- Up-to-date: /home/diogo/MIR_Project_2024/glassy_challenge_ws/install/glassy_utils/share/glassy_utils/environment/path.dsv
+-- Up-to-date: /home/diogo/MIR_Project_2024/glassy_challenge_ws/install/glassy_utils/share/glassy_utils/local_setup.bash
+-- Up-to-date: /home/diogo/MIR_Project_2024/glassy_challenge_ws/install/glassy_utils/share/glassy_utils/local_setup.sh
+-- Up-to-date: /home/diogo/MIR_Project_2024/glassy_challenge_ws/install/glassy_utils/share/glassy_utils/local_setup.zsh
+-- Up-to-date: /home/diogo/MIR_Project_2024/glassy_challenge_ws/install/glassy_utils/share/glassy_utils/local_setup.dsv
+-- Installing: /home/diogo/MIR_Project_2024/glassy_challenge_ws/install/glassy_utils/share/glassy_utils/package.dsv
+-- Up-to-date: /home/diogo/MIR_Project_2024/glassy_challenge_ws/install/glassy_utils/share/ament_index/resource_index/packages/glassy_utils
+-- Up-to-date: /home/diogo/MIR_Project_2024/glassy_challenge_ws/install/glassy_utils/share/glassy_utils/cmake/GlassyGeneralUtilsExport.cmake
+-- Up-to-date: /home/diogo/MIR_Project_2024/glassy_challenge_ws/install/glassy_utils/share/glassy_utils/cmake/GlassyGeneralUtilsExport-noconfig.cmake
+-- Up-to-date: /home/diogo/MIR_Project_2024/glassy_challenge_ws/install/glassy_utils/share/glassy_utils/cmake/ament_cmake_export_targets-extras.cmake
+-- Up-to-date: /home/diogo/MIR_Project_2024/glassy_challenge_ws/install/glassy_utils/share/glassy_utils/cmake/glassy_utilsConfig.cmake
+-- Up-to-date: /home/diogo/MIR_Project_2024/glassy_challenge_ws/install/glassy_utils/share/glassy_utils/cmake/glassy_utilsConfig-version.cmake
+-- Up-to-date: /home/diogo/MIR_Project_2024/glassy_challenge_ws/install/glassy_utils/share/glassy_utils/package.xml
