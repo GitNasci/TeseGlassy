@@ -20,7 +20,7 @@ StateManager::StateManager() : Node("glassy_state_manager")
     this->declare_parameter("rates/actuator_publishing", 40);
     this->declare_parameter("rates/mission_info_publishing", 2);
     this->declare_parameter("timeouts/actuator_timeout", 1500000000);
-    this->declare_parameter("timeouts/mission_timeout", 20000000000);
+    this->declare_parameter("timeouts/mission_timeout", 60000000000);
     this->declare_parameter("thrust_upper_limit", 0.5);
     this->declare_parameter("thrust_trim", 0.0);
     this->declare_parameter("rudder_trim", 0.0);

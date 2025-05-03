@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+#exercicio 2
 import rclpy
 from rclpy.node import Node
 
@@ -5,7 +7,7 @@ import px4_msgs.msg as px4_msgs
 import std_srvs.srv as std_srvs
 
 import glassy_msgs.msg as glassy_msgs
-
+import math
 
 # allowed libraries
 import numpy as np
@@ -31,6 +33,86 @@ class GlassyChallenge(Node):
 
         self.initial_x = 0.0
         self.initial_y = 0.0
+        
+
+
+        self.p=0
+        self.v=0
+        self.psi=0
+
+
+        self.psi_d = 0
+        self.v_d = 0
+        self.p_d = 0
+        
+        self.J=0
+        self.J_d=0
+        self.J2d=0
+        
+        
+
+        self.e_p = 0
+        
+
+
+        self.v_norm = 0
+        self.e_np = 0
+        
+
+        self.ie_np =0
+        
+
+        self.e_dp_aux =0
+        self.e_dp = 0
+        
+
+        self.e_V = 0
+        self.e_Va = 0
+        
+
+        self.ie_Va =0
+        
+
+        self.e_np = 0
+        self.e_Va =0      
+
+
+        self.e_yaw = 0
+        self.e_yaw = 0
+        self.e_om = 0 
+
+        self.e_dp = 0.0  
+        self.e_dv = 0.0  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         self.is_active = False
 
@@ -47,8 +129,83 @@ class GlassyChallenge(Node):
         self.cross_track_distance = 0.0
         self.velocity_above_max = 0.0
 
+    	#Gains for nonlinear controller TBD
+        #direction
+        self.kyaw_delta = 2; 
+        self.kom_delta = 1;   
+        self.kdp_delta = 1;     	
+        self.kdv_delta = 0;   
+    	
+    	#surge
+        self.kp_n = 2.0;  
+        self.kpi_n = 0.500; 
+        self.kV_n = 10.0;  
+        self.kVi_n = 5; 
 
+        #rudder
+        self.delta_max = 60*math.pi/180;
+        
 
+       # # --------- PREPARAR VARIÁVEIS DE ESTADO ---------#
+       #  self.p = eta[0:2]            # posição [x, y]
+       #  self.psi = eta[2]            # orientação (ângulo)
+       #  self.v = nu[0:2]             # velocidade linear
+       #  self.om = nu[2]              # velocidade angular
+
+       #  # Matriz de rotação
+       #  self.J = np.array([
+       #      [np.cos(psi), -np.sin(psi)],
+       #      [np.sin(psi),  np.cos(psi)]
+       #  ])
+
+       #  self.J2d = J[0:2, 0:2]       # submatriz 2x2
+
+       #  # --------- VARIÁVEIS INTEGRAIS ---------
+       #  ie_p = ie_x[0:2]
+       #  ie_Va = ie_x[2]
+       #  ie_yaw = ie_x[3]
+        
+       #  # --------- REFERÊNCIAS ---------
+       #  p_d = eta_d[0:2]
+       #  psi_d = eta_d[2]
+        
+       #  v_d = nu_d[0:2]
+       #  om_d = nu_d[2]
+        
+       #  Jd = np.array([
+       #      [np.cos(psi_d), -np.sin(psi_d)],
+       #      [np.sin(psi_d),  np.cos(psi_d)]
+       #  ])
+       #  Jd2d = Jd[0:2, 0:2]
+        
+       #  # --------- CÁLCULO DOS ERROS ---------
+        
+       #  # Erro de posição projetado
+       #  e_p = np.dot(Jd2d.T, p - p_d)
+        
+       #  # Componente normal do erro de posição
+       #  e_np = max(np.dot(e_p.T, v) / np.linalg.norm(v), 0)
+        
+       #  # Componente normal do erro integral de posição
+       #  ie_np = max(np.dot(ie_p.T, v) / np.linalg.norm(v), 0)
+        
+       #  # Direção do erro de posição
+       #  e_dp_aux = e_p / np.linalg.norm(e_p)
+       #  e_dp = e_dp_aux[1]
+        
+       #  # Erro de velocidade projetado
+       #  e_v = np.dot(Jd2d.T, np.dot(J2d, v - v_d))
+        
+       #  # Norma do erro de velocidade
+       #  e_nv = np.linalg.norm(e_v)
+        
+       #  # Direção do erro de velocidade
+       #  e_dv_aux = e_v / e_nv
+       #  e_dv = e_dv_aux[1]
+        
+        
+        
+	
         #********************************************************************************
         #
         #
@@ -78,6 +235,7 @@ class GlassyChallenge(Node):
         self.timer_control_.cancel();
     
         self.time_of_last_mission_status_msg_received = None;
+        self.counter= False;
 
 
 
@@ -89,24 +247,22 @@ class GlassyChallenge(Node):
         # Get the yaw and yaw rate (most important for the challenge)
         self.yaw = msg.yaw
         self.yaw_rate = msg.yaw_rate
-
         self.surge = msg.v_body[0]
         self.sway = msg.v_body[1]
-
         self.x = msg.p_ned[0]
         self.y = msg.p_ned[1]
-
-        current_time = self.get_clock().now().nanoseconds/1e9
-        dt = (current_time - self.time_prev)
+        
+        
+        
 
         # calculate the integral of the cross track distance
-        self.cross_track_distance += np.abs(( np.cos(self.initial_yaw) * (self.initial_y-self.y) - np.sin(self.initial_yaw) * (self.initial_x - self.x)))**2 * dt
+        #self.cross_track_distance += np.abs(( np.cos(self.initial_yaw) * (self.initial_y-self.y) - np.sin(self.initial_yaw) * (self.initial_x - self.x)))**2 * dt
 
         # calculate the integral of the velocity above the max velocity
-        self.velocity_above_max += np.maximum(np.sqrt(self.surge**2 + self.sway**2) - self.max_velocity, 0)**2 * dt
+        #self.velocity_above_max += np.maximum(np.sqrt(self.surge**2 + self.sway**2) - self.max_velocity, 0)**2 * dt
 
-
-        self.time_prev = current_time
+        #self.time_prev = current_time
+        
 
         
 
@@ -117,6 +273,7 @@ class GlassyChallenge(Node):
         """
         Checks whether the mission is active or not.
         """
+        
         if self.is_active:
             if msg.mission_mode != glassy_msgs.MissionInfo.SUMMER_CHALLENGE:
                 self.timer_control_.cancel()
@@ -125,15 +282,15 @@ class GlassyChallenge(Node):
 
                 get_projection_on_line = np.dot([self.x - self.initial_x, self.y - self.initial_y], [np.cos(self.initial_yaw), np.sin(self.initial_yaw)])
 
-
+		
                 self.get_logger().info('Mission ended')
-                self.get_logger().info('ALONG TRACK DISTANCE (larger is better): ' + str(get_projection_on_line))
-                self.get_logger().info('CROSS TRACK DISTANCE SQUARED INTEGRAL (lower is better): ' + str(self.cross_track_distance))
-                self.get_logger().info('VELOCITY OVER MAX SQUARED INTEGRAL (lower is better): ' + str(self.velocity_above_max))
-                self.get_logger().info('ALONG TRACK DISTANCE SCORE: ' + str(get_projection_on_line * self.total_dist_coef))
-                self.get_logger().info('CROSS TRACK DISTANCE INTEGRAL SCORE: ' + str(- self.cross_dist_coef * self.cross_track_distance))
-                self.get_logger().info('VELOCITY OVER MAX INTEGRAL SCORE: ' + str(- self.vel_coef * self.velocity_above_max))
-                self.get_logger().info('TOTAL SCORE: ' + str(get_projection_on_line * self.total_dist_coef - self.cross_dist_coef * self.cross_track_distance - self.vel_coef * self.velocity_above_max))
+                #self.get_logger().info('ALONG TRACK DISTANCE (larger is better): ' + str(get_projection_on_line))
+                #self.get_logger().info('CROSS TRACK DISTANCE SQUARED INTEGRAL (lower is better): ' + str(self.cross_track_distance))
+                #self.get_logger().info('VELOCITY OVER MAX SQUARED INTEGRAL (lower is better): ' + str(self.velocity_above_max))
+                #self.get_logger().info('ALONG TRACK DISTANCE SCORE: ' + str(get_projection_on_line * self.total_dist_coef))
+                #self.get_logger().info('CROSS TRACK DISTANCE INTEGRAL SCORE: ' + str(- self.cross_dist_coef * self.cross_track_distance))
+                #self.get_logger().info('VELOCITY OVER MAX INTEGRAL SCORE: ' + str(- self.vel_coef * self.velocity_above_max))
+                #self.get_logger().info('TOTAL SCORE: ' + str(get_projection_on_line * self.total_dist_coef - self.cross_dist_coef * self.cross_track_distance - self.vel_coef * self.velocity_above_max))
 
         else:
             if msg.mission_mode == glassy_msgs.MissionInfo.SUMMER_CHALLENGE:
@@ -177,9 +334,18 @@ class GlassyChallenge(Node):
         # You also have access to the initial yaw, and position:
         # initial_yaw [-pi, pi] (rad)
         # initial_x, initial_y (m)
+        
+        # self.get_logger().info('Surge: ' + str(self.surge) )
+        # self.get_logger().info('Sway: ' + str(self.sway) )
+        # self.get_logger().info('Yaw: ' + str(self.yaw) )
+        
+        
 
 
+        current_time = self.get_clock().now().nanoseconds/1e9
+        dt = (current_time - self.time_prev)
 
+        self.define_states(dt)
 
         #********************************************************************************
         #
@@ -199,13 +365,31 @@ class GlassyChallenge(Node):
         # After finishing your calculations, fill the following variables with the values you want to publish, and thats it, you are done.
 
         # Fill these values in please (motor should be between [0,1]) (max thrust is reduced, to avoid accidents)
-        #currently, the motor is a constant value, just to test that everything is working
-        motor_value = 0.3
+        #n_norm = (-self.kp_n * e_np - self.kpi_n * ie_np  - self.kV_n * e_Va - self.kVi_n * ie_Va)
 
+        #motor_value = np.clip(n_norm, 0.0, 1.0)
+        n_norm = (-self.kp_n * self.e_np - self.kpi_n * self.ie_np - self.kV_n * self.e_Va - self.kVi_n * self.ie_Va)
+        motor_value = np.clip(n_norm, 0.0, 1.0)
+        
+        self.get_logger().info(
+        f"n_norm = -({self.kp_n} * {self.e_np:.3f}) "
+        f"- ({self.kpi_n} * {self.ie_np:.3f}) "
+        f"- ({self.kV_n} * {self.e_Va:.3f}) "
+        f"- ({self.kVi_n} * {self.ie_Va:.3f}) = {n_norm:.3f}"
+        f"motor_value= {motor_value:.3f}"
+        )
+
+        
+        
+        
         # Fill (rudder should be between [-1,1])
-        # currently, the rudder is a sinusoidal function of time, just to test that everything is working
-        rudder_value = np.sin(self.get_clock().now().nanoseconds/1000000000)
-
+        
+        delta_norm = (-self.kyaw_delta * self.e_yaw-self.kom_delta * self.e_om-self.kdp_delta * self.e_dp-self.kdv_delta * self.e_dv)
+        
+        rudder_value= np.clip(delta_norm * self.delta_max, -1.0, 1.0)
+        
+        
+	
 
         self.publish_actuators(motor_value, rudder_value)
 
@@ -229,6 +413,59 @@ class GlassyChallenge(Node):
 
         self.actuators_publisher_.publish(msg=msg_actuators)
 
+
+    def define_states(self,dt):
+        # Estado atual
+        self.v= np.array([self.surge, self.sway])
+        self.p = np.array([self.x, self.y])
+        self.psi = self.yaw
+        
+        # Direção desejada — linha reta no yaw inicial
+        self.psi_d = self.initial_yaw
+        self.v_d = np.array([1.0, 0.0])  # seguir para frente (direção surge)
+        self.p_d = np.array([self.initial_x, self.initial_y])
+        
+        self.J = np.array([  [np.cos(self.psi), -np.sin(self.psi)],  [np.sin(self.psi),  np.cos(self.psi)]])
+        self.J2d = self.J[0:2, 0:2] 
+        
+        self.J_d = np.array([   [np.cos(self.psi_d), -np.sin(self.psi_d)],   [np.sin(self.psi_d),  np.cos(self.psi_d)]])
+        self.Jd2d = self.J_d[0:2, 0:2]
+
+        
+        
+        
+        self.e_p=np.dot(self.Jd2d.T, self.p - self.p_d)
+        
+        self.v_norm = np.linalg.norm(self.v) + 1e-6  # evitar divisão por zero
+#        self.e_np = max(np.dot(self.e_p.T, self.v) / self.v_norm, 0)
+
+        if np.linalg.norm(self.v) > 0.05:  # só acumular erro projetado se o barco está a andar
+            self.e_np = max(np.dot(self.e_p.T, self.v) / (np.linalg.norm(self.v) + 1e-6), 0)
+        else:
+            self.e_np = 0.0
+
+
+        
+        self.ie_np += self.e_np * dt
+        #self.ie_np = np.clip(self.ie_np, -10.0, 10.0)
+
+
+        self.e_dp_aux = self.e_p / np.linalg.norm(self.e_p + 1e-6)
+        self.e_dp = self.e_dp_aux[1]
+        
+        self.e_V = np.dot(self.Jd2d.T, np.dot(self.J2d, self.v - self.v_d))
+        self.e_Va = self.e_V[0]
+
+        # Acumular integral (precisas inicializar self.ie_Va antes no __init__)
+        self.ie_Va += self.e_Va * dt
+        #self.ie_Va = np.clip(self.ie_Va, -10.0, 10.0)
+        
+        self.e_yaw = self.initial_yaw - self.yaw
+        self.e_yaw = np.arctan2(np.sin(self.e_yaw), np.cos(self.e_yaw))  # normalizar para [-pi, pi]
+        self.e_om = -self.yaw_rate  # erro de yaw rate (referência = 0)    
+
+
+        
     
 
 def main(args=None):
