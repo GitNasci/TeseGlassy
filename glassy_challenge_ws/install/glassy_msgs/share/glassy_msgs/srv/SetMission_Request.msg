@@ -1,1 +1,0 @@
-glassy_msgs/MissionInfo mission_info
