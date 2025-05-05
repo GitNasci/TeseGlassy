@@ -9,6 +9,8 @@ import std_srvs.srv as std_srvs
 import glassy_msgs.msg as glassy_msgs
 import math
 
+import scipy.io as sio
+
 # allowed libraries
 import numpy as np
 
@@ -34,13 +36,12 @@ class GlassyChallenge(Node):
         self.initial_x = 0.0
         self.initial_y = 0.0
         
-
-
+        # Estado atual
         self.p=0
         self.v=0
         self.psi=0
 
-
+        # Direção desejada — linha reta no yaw inicial
         self.psi_d = 0
         self.v_d = 0
         self.p_d = 0
@@ -50,29 +51,29 @@ class GlassyChallenge(Node):
         self.J2d=0
         
         
-
+        # Erro de posição projetado na direção desejada
         self.e_p = 0
         
 
-
+        # Erro longitudinal (surge): componente do erro de posição na direção do movimento
         self.v_norm = 0
         self.e_np = 0
         
-
+        # Acumular integral
         self.ie_np =0
         
-
+        # Direção do erro (opcional, se usares e_dp)
         self.e_dp_aux =0
         self.e_dp = 0
         
-
+        # Erro de velocidade longitudinal
         self.e_V = 0
         self.e_Va = 0
         
-
+        # Acumular integral (precisas inicializar self.ie_Va antes no __init__)
         self.ie_Va =0
         
-
+        # Guardar para o controlo
         self.e_np = 0
         self.e_Va =0      
 
@@ -81,8 +82,8 @@ class GlassyChallenge(Node):
         self.e_yaw = 0
         self.e_om = 0 
 
-        self.e_dp = 0.0  
-        self.e_dv = 0.0  
+        self.e_dp = 0.0  # se não estiveres a usar deriva longitudinal    
+        self.e_dv = 0.0  # idem para velocidade lateral
 
 
 
@@ -145,8 +146,24 @@ class GlassyChallenge(Node):
         #rudder
         self.delta_max = 60*math.pi/180;
         
+        self.debug_log = {
+            "time": [],
+            "e_np": [],
+            "ie_np": [],
+            "e_Va": [],
+            "ie_Va": [],
+            "motor_value": [],
+            "rudder_value": [],
+            "surge": [],
+            "yaw": []}
+                
+    
 
-       
+
+
+
+
+
 
         # create publishers for torque and thrust setpoints
         self.actuators_publisher_ = self.create_publisher(glassy_msgs.Actuators, 'glassy/actuators', 1)
@@ -206,6 +223,9 @@ class GlassyChallenge(Node):
             if msg.mission_mode != glassy_msgs.MissionInfo.SUMMER_CHALLENGE:
                 self.timer_control_.cancel()
                 self.is_active = False
+
+                self.save_debug_to_mat()
+                
 
 
                 get_projection_on_line = np.dot([self.x - self.initial_x, self.y - self.initial_y], [np.cos(self.initial_yaw), np.sin(self.initial_yaw)])
@@ -316,9 +336,10 @@ class GlassyChallenge(Node):
         
         rudder_value= np.clip(delta_norm * self.delta_max, -1.0, 1.0)
         
+    
         
-	
-
+        self.save_debug(motor_value,rudder_value)
+    
         self.publish_actuators(motor_value, rudder_value)
 
 
@@ -393,7 +414,25 @@ class GlassyChallenge(Node):
         self.e_om = -self.yaw_rate  # erro de yaw rate (referência = 0)    
 
 
+    def save_debug(self,motor_value, rudder_value):
         
+        
+        self.debug_log["time"].append(self.get_clock().now().nanoseconds / 1e9)
+        self.debug_log["e_np"].append(self.e_np)
+        self.debug_log["ie_np"].append(self.ie_np)
+        self.debug_log["e_Va"].append(self.e_Va)
+        self.debug_log["ie_Va"].append(self.ie_Va)
+        self.debug_log["motor_value"].append(motor_value)
+        self.debug_log["rudder_value"].append(rudder_value)
+        self.debug_log["surge"].append(self.surge)
+        self.debug_log["yaw"].append(self.yaw)
+        
+        
+        
+    def save_debug_to_mat(self):
+        sio.savemat("/home/diogo/Documents/GitHub/TeseGlassy/debug.mat", self.debug_log)
+        self.get_logger().info("Debug data saved")
+            
     
 
 def main(args=None):
