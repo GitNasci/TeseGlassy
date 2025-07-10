@@ -1,40 +1,69 @@
-%% Carregar dados
-load('debug.mat');
+% =====================================================================
+% analyze_debug_separado.m   –   Glassy Challenge logger analysis
+% =====================================================================
+% 1. Ajuste o caminho abaixo para o seu ficheiro debug.mat.
+% 2. No terminal do Octave, execute:   analyze_debug_separado
+% 3. Será aberta UMA janela por variável (tempo no eixo-x).
+% 4. No console, aparecem as estatísticas de média ± std de cada campo.
+% ---------------------------------------------------------------------
 
-%% Erros (e_np, ie_np, e_Va, ie_Va)
-figure('Name', 'Erros');
-subplot(2,2,1);
-plot(time, e_np, 'LineWidth', 1.5);
-title('Erro de posição normal (e_{np})'); xlabel('Tempo [s]'); ylabel('e_{np}'); grid on;
+clear; clc; close all;
 
-subplot(2,2,2);
-plot(time, ie_np, 'LineWidth', 1.5);
-title('Erro integral de posição (ie_{np})'); xlabel('Tempo [s]'); ylabel('ie_{np}'); grid on;
+% ---------- 1) Caminho do ficheiro -----------------------------------
+matFile = '/home/diogo/Documents/GitHub/TeseGlassy/debug.mat';
+if ~exist(matFile, 'file')
+    error('Ficheiro não encontrado: %s', matFile);
+end
 
-subplot(2,2,3);
-plot(time, e_Va, 'LineWidth', 1.5);
-title('Erro de velocidade longitudinal (e_{Va})'); xlabel('Tempo [s]'); ylabel('e_{Va}'); grid on;
+% ---------- 2) Carregar dados ----------------------------------------
+D = load(matFile);
 
-subplot(2,2,4);
-plot(time, ie_Va, 'LineWidth', 1.5);
-title('Erro integral de velocidade (ie_{Va})'); xlabel('Tempo [s]'); ylabel('ie_{Va}'); grid on;
+% Campos padrão gravados pelo logger --------------------
+campos = { 'time', 'e_np', 'ie_np', 'e_Va', 'ie_Va',  'e_yaw', 'ie_np', 'e_om', 'e_dp', ...
+           'motor_value', 'rudder_value', 'surge', 'yaw' };
 
-%% Comandos de controlo
-figure('Name', 'Comandos de Controlo');
-subplot(2,1,1);
-plot(time, motor_value, 'LineWidth', 1.5);
-title('Comando de motor (motor\_value)'); xlabel('Tempo [s]'); ylabel('Motor'); grid on;
+% Remove campos que não existem neste debug.mat ----------
+campos = campos( ismember(campos, fieldnames(D)) );
 
-subplot(2,1,2);
-plot(time, rudder_value, 'LineWidth', 1.5);
-title('Comando de leme (rudder\_value)'); xlabel('Tempo [s]'); ylabel('Rudder'); grid on;
+fprintf('Campos carregados (%d): %s\n', numel(campos), strjoin(campos, ', '));
 
-%% Estados observados
-figure('Name', 'Estados do Barco');
-subplot(2,1,1);
-plot(time, surge, 'LineWidth', 1.5);
-title('Velocidade surge'); xlabel('Tempo [s]'); ylabel('surge [m/s]'); grid on;
+% ---------- 3) Gerar eixo-x (tempo ou índice) ------------------------
+if ismember('time', campos)
+    t = D.time(:) - D.time(1);               % tempo relativo em segundos
+else
+    t = (0:numel(D.(campos{1}))-1)';         % índice se “time” ausente
+    warning('Campo "time" ausente – usando índice como eixo-x.');
+end
 
-subplot(2,1,2);
-plot(time, yaw, 'LineWidth', 1.5);
-title('Orientação (yaw)'); xlabel('Tempo [s]'); ylabel('yaw [rad]'); grid on;
+% ---------- 4) Plot: uma janela por variável -------------------------
+vars_to_plot = setdiff(campos, {'time'});     % exclui “time” do loop
+
+% (opcional) se a sua placa de vídeo cortar linhas longas,
+% descomente a linha seguinte para forçar renderização em software:
+% opengl ("software");
+
+for k = 1:numel(vars_to_plot)
+    v = D.(vars_to_plot{k})(:);              % força vetor-coluna
+
+    figure('Name', sprintf('%s – Glassy debug', vars_to_plot{k}), ...
+           'NumberTitle', 'off', 'Color', 'w');
+
+    plot(t, v, 'LineWidth', 1.2);
+    grid on;
+    xlabel('tempo [s]');
+    ylabel(vars_to_plot{k}, 'Interpreter', 'none');
+    title(vars_to_plot{k}, 'Interpreter', 'none');
+
+    % (opcional) maximizar a janela – útil em desktops KDE/Gnome:
+    % drawnow; pause(0.01); set(gcf, 'WindowState', 'maximized');
+end
+
+% ---------- 5) Estatísticas ------------------------------------------
+%fprintf('\nMédia ± std:\n');
+%for k = 1:numel(vars_to_plot)
+%    v = D.(vars_to_plot{k})(:);
+%    fprintf('  %-12s :  %8.3f  ±  %8.3f\n', ...
+%            vars_to_plot{k}, mean(v, 'omitnan'), std(v, 'omitnan'));
+%end
+
+fprintf('\nScript concluído.\n');
