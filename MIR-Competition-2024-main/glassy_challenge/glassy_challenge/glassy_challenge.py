@@ -13,6 +13,8 @@ import scipy.io as sio
 
 # allowed libraries
 import numpy as np
+from visualization_msgs.msg import Marker
+from geometry_msgs.msg import Point
 
 
 class GlassyChallenge(Node):
@@ -69,6 +71,7 @@ class GlassyChallenge(Node):
         # Erro de velocidade longitudinal
         self.e_V = 0
         self.e_Va = 0
+        self.u_ref=1
         
         # Acumular integral (precisas inicializar self.ie_Va antes no __init__)
         self.ie_Va =0
@@ -79,16 +82,18 @@ class GlassyChallenge(Node):
 
 
         self.e_yaw = 0
-        self.e_yaw = 0
         self.e_om = 0 
 
         self.e_dp = 0.0  # se não estiveres a usar deriva longitudinal    
         self.e_dv = 0.0  # idem para velocidade lateral
-
-
-
-
-
+        
+        self.int_e_psi = 0.0
+        self.int_e_u   = 0.0
+        self.time_prev = self.get_clock().now().nanoseconds * 1e-9
+        
+        self.mission_start_time=0
+        
+        self.dt_aux=0
 
 
 
@@ -126,7 +131,7 @@ class GlassyChallenge(Node):
 
 
         #auxiliary variables
-        self.time_prev = 0.0
+        #self.time_prev = 0.0
         self.cross_track_distance = 0.0
         self.velocity_above_max = 0.0
 
@@ -138,10 +143,10 @@ class GlassyChallenge(Node):
         self.kdv_delta = 0;   
     	
     	#surge
-        self.kp_n = 2.0;  
-        self.kpi_n = 0.500; 
-        self.kV_n = 10.0;  
-        self.kVi_n = 5; 
+        self.kp_n = 3.0;  
+        self.kpi_n = 0.600; 
+        self.kV_n = 12.0;  
+        self.kVi_n = 2; 
 
         #rudder
         self.delta_max = 60*math.pi/180;
@@ -152,6 +157,10 @@ class GlassyChallenge(Node):
             "ie_np": [],
             "e_Va": [],
             "ie_Va": [],
+            "e_yaw": [],
+            "e_om": [],
+            "e_dp": [],
+            "e_dv": [],
             "motor_value": [],
             "rudder_value": [],
             "surge": [],
@@ -183,6 +192,9 @@ class GlassyChallenge(Node):
         self.counter= False;
 
 
+        self.marker_pub = self.create_publisher(Marker, 'visualization_marker', 1)
+
+
 
     def state_subscription_callback(self, msg):
         """
@@ -201,12 +213,11 @@ class GlassyChallenge(Node):
         
 
         # calculate the integral of the cross track distance
-        #self.cross_track_distance += np.abs(( np.cos(self.initial_yaw) * (self.initial_y-self.y) - np.sin(self.initial_yaw) * (self.initial_x - self.x)))**2 * dt
+        self.cross_track_distance += np.abs(( np.cos(self.initial_yaw) * (self.initial_y-self.y) - np.sin(self.initial_yaw) * (self.initial_x - self.x)))**2 * self.dt_aux
 
         # calculate the integral of the velocity above the max velocity
-        #self.velocity_above_max += np.maximum(np.sqrt(self.surge**2 + self.sway**2) - self.max_velocity, 0)**2 * dt
+        self.velocity_above_max += np.maximum(np.sqrt(self.surge**2 + self.sway**2) - self.max_velocity, 0)**2 * self.dt_aux
 
-        #self.time_prev = current_time
         
 
         
@@ -227,23 +238,27 @@ class GlassyChallenge(Node):
                 self.save_debug_to_mat()
                 
 
+                
+
 
                 get_projection_on_line = np.dot([self.x - self.initial_x, self.y - self.initial_y], [np.cos(self.initial_yaw), np.sin(self.initial_yaw)])
 
 		
                 self.get_logger().info('Mission ended')
-                #self.get_logger().info('ALONG TRACK DISTANCE (larger is better): ' + str(get_projection_on_line))
-                #self.get_logger().info('CROSS TRACK DISTANCE SQUARED INTEGRAL (lower is better): ' + str(self.cross_track_distance))
-                #self.get_logger().info('VELOCITY OVER MAX SQUARED INTEGRAL (lower is better): ' + str(self.velocity_above_max))
-                #self.get_logger().info('ALONG TRACK DISTANCE SCORE: ' + str(get_projection_on_line * self.total_dist_coef))
-                #self.get_logger().info('CROSS TRACK DISTANCE INTEGRAL SCORE: ' + str(- self.cross_dist_coef * self.cross_track_distance))
-                #self.get_logger().info('VELOCITY OVER MAX INTEGRAL SCORE: ' + str(- self.vel_coef * self.velocity_above_max))
-                #self.get_logger().info('TOTAL SCORE: ' + str(get_projection_on_line * self.total_dist_coef - self.cross_dist_coef * self.cross_track_distance - self.vel_coef * self.velocity_above_max))
+                self.get_logger().info('ALONG TRACK DISTANCE (larger is better): ' + str(get_projection_on_line))
+                self.get_logger().info('CROSS TRACK DISTANCE SQUARED INTEGRAL (lower is better): ' + str(self.cross_track_distance))
+                self.get_logger().info('VELOCITY OVER MAX SQUARED INTEGRAL (lower is better): ' + str(self.velocity_above_max))
+                self.get_logger().info('ALONG TRACK DISTANCE SCORE: ' + str(get_projection_on_line * self.total_dist_coef))
+                self.get_logger().info('CROSS TRACK DISTANCE INTEGRAL SCORE: ' + str(- self.cross_dist_coef * self.cross_track_distance))
+                self.get_logger().info('VELOCITY OVER MAX INTEGRAL SCORE: ' + str(- self.vel_coef * self.velocity_above_max))
+                self.get_logger().info('TOTAL SCORE: ' + str(get_projection_on_line * self.total_dist_coef - self.cross_dist_coef * self.cross_track_distance - self.vel_coef * self.velocity_above_max))
 
         else:
             if msg.mission_mode == glassy_msgs.MissionInfo.SUMMER_CHALLENGE:
                 self.timer_control_.reset()
                 self.is_active = True
+                self.publish_reference_line(length=200.0)   # <── NOVO
+
 
                 # reset the initial mission values
                 # HERE YOU CAN ADD SLIGHT OFFSETS TO THE INITIAL VALUES, TO MAKE THE CHALLENGE MORE INTERESTING/COMPLICATED, AND TEST YOUR CONTROLLER BETTER
@@ -256,14 +271,50 @@ class GlassyChallenge(Node):
                 self.time_prev = self.get_clock().now().nanoseconds/1e9
                 self.cross_track_distance = 0.0
                 self.velocity_above_max = 0.0
-        
+                self.mission_start_time = self.get_clock().now().nanoseconds * 1e-9
+
 
 
     def myChallengeController(self):
         """
         Implement the controller for the challenge here.
         (it will run at 30Hz)
-        """
+        # """
+        #     # A) dt
+        # now = self.get_clock().now().nanoseconds * 1e-9
+        # dt  = max(now - self.time_prev, 1e-3)
+        # self.time_prev = now
+    
+        # # B) Actualizar estados/erros
+        # self.define_states(dt)
+    
+        # # C) LOS: rumo de referência
+        # L       = 3.0               # look-ahead [m]
+        # k_cte   = 1.0
+        # psi_ref = self.initial_yaw + math.atan2(-k_cte*self.e_dp, L)
+    
+        # # D) PID de rumo → rudder
+        # e_psi = math.atan2(math.sin(psi_ref - self.yaw),
+        #                    math.cos(psi_ref - self.yaw))
+        # self.int_e_psi += e_psi * dt
+        # kp_psi, ki_psi, kd_psi = 4.0, 0.5, 0.8
+        # delta_cmd = kp_psi*e_psi + ki_psi*self.int_e_psi - kd_psi*self.yaw_rate
+    
+        # delta_max_rad = 60*math.pi/180
+        # rudder_value  = np.clip(delta_cmd / delta_max_rad, -1.0, 1.0)
+    
+        # # E) PID de velocidade → motor
+        # u_ref = 1.2                                   # m/s
+        # e_u   = u_ref - self.surge
+        # self.int_e_u += e_u * dt
+        # kp_u, ki_u = 3.0, 0.8
+        # n_cmd = kp_u*e_u + ki_u*self.int_e_u
+        # motor_value = np.clip(n_cmd, 0.0, 1.0)
+    
+        # # F) Publicar e registar
+        # self.save_debug(motor_value, rudder_value)
+        # self.publish_actuators(motor_value, rudder_value)
+        
         # Implement your controller here 
         # You can use the variables self.yaw, self.yaw_rate, self.surge, self.sway, self.x, self.y (only a subset of these is actually needed)
         # You also have access to the initial position and yaw (self.initial_x, self.initial_y, self.initial_yaw)
@@ -289,36 +340,44 @@ class GlassyChallenge(Node):
         
         
 
-
+        
         current_time = self.get_clock().now().nanoseconds/1e9
         dt = (current_time - self.time_prev)
-
+        
+        self.time_prev=current_time
+        self.dt_aux=dt
+        
+        
         self.define_states(dt)
 
-        #********************************************************************************
-        #
-        #
-        #
-        #
-        #                            YOUR CALCULATIONS GO HERE
-        #                                   GOOD LUCK!
-        #
-        #
-        #
-        #
-        #
-        #*********************************************************************************
+        # #********************************************************************************
+        # #
+        # #
+        # #
+        # #
+        # #                            YOUR CALCULATIONS GO HERE
+        # #                                   GOOD LUCK!
+        # #
+        # #
+        # #
+        # #
+        # #
+        # #*********************************************************************************
 
 
-        # After finishing your calculations, fill the following variables with the values you want to publish, and thats it, you are done.
+        # # After finishing your calculations, fill the following variables with the values you want to publish, and thats it, you are done.
 
-        # Fill these values in please (motor should be between [0,1]) (max thrust is reduced, to avoid accidents)
+        # # Fill these values in please (motor should be between [0,1]) (max thrust is reduced, to avoid accidents)
         #n_norm = (-self.kp_n * e_np - self.kpi_n * ie_np  - self.kV_n * e_Va - self.kVi_n * ie_Va)
 
         #motor_value = np.clip(n_norm, 0.0, 1.0)
-        n_norm = (-self.kp_n * self.e_np - self.kpi_n * self.ie_np - self.kV_n * self.e_Va - self.kVi_n * self.ie_Va)
-        motor_value = np.clip(n_norm, 0.0, 1.0)
+        n_norm = -( self.kp_n  * self.e_np
+                 + self.kpi_n * self.ie_np
+                 + self.kV_n  * self.e_Va
+                 + self.kVi_n * self.ie_Va )        
         
+        motor_value = np.clip(n_norm, 0.00, 1.0)
+                
         self.get_logger().info(
         f"n_norm = -({self.kp_n} * {self.e_np:.3f}) "
         f"- ({self.kpi_n} * {self.ie_np:.3f}) "
@@ -330,11 +389,22 @@ class GlassyChallenge(Node):
         
         
         
-        # Fill (rudder should be between [-1,1])
+        # # Fill (rudder should be between [-1,1])
         
-        delta_norm = (-self.kyaw_delta * self.e_yaw-self.kom_delta * self.e_om-self.kdp_delta * self.e_dp-self.kdv_delta * self.e_dv)
+        delta_norm = (self.kyaw_delta * self.e_yaw
+                       + self.kom_delta * self.e_om
+                      - self.kdp_delta * self.e_dp
+                      - self.kdv_delta * self.e_dv)
         
         rudder_value= np.clip(delta_norm * self.delta_max, -1.0, 1.0)
+        
+        self.get_logger().info(
+        f"delta_norm = -({self.kyaw_delta} * {self.e_yaw:.3f}) "
+        f"- ({self.kom_delta} * {self.e_om:.3f}) "
+        f"- ({self.kdp_delta} * {self.e_dp:.3f}) "
+        f"- ({self.kdv_delta} * {self.e_dv:.3f}) = {delta_norm:.3f}"
+        f"rudder_value= {rudder_value:.3f}"
+        )
         
     
         
@@ -363,58 +433,70 @@ class GlassyChallenge(Node):
         self.actuators_publisher_.publish(msg=msg_actuators)
 
 
-    def define_states(self,dt):
+    def define_states(self, dt):
+        
+        current_time = self.get_clock().now().nanoseconds * 1e-9
+        self.update_reference(current_time, ref_mode=2)   # 1: linha, 2: círculo
+
+        
         # Estado atual
-        self.v= np.array([self.surge, self.sway])
+        self.v = np.array([self.surge, self.sway])
         self.p = np.array([self.x, self.y])
         self.psi = self.yaw
-        
-        # Direção desejada — linha reta no yaw inicial
-        self.psi_d = self.initial_yaw
-        self.v_d = np.array([1.0, 0.0])  # seguir para frente (direção surge)
-        self.p_d = np.array([self.initial_x, self.initial_y])
-        
-        self.J = np.array([  [np.cos(self.psi), -np.sin(self.psi)],  [np.sin(self.psi),  np.cos(self.psi)]])
-        self.J2d = self.J[0:2, 0:2] 
-        
-        self.J_d = np.array([   [np.cos(self.psi_d), -np.sin(self.psi_d)],   [np.sin(self.psi_d),  np.cos(self.psi_d)]])
-        self.Jd2d = self.J_d[0:2, 0:2]
-
-        
-        
-        
-        self.e_p=np.dot(self.Jd2d.T, self.p - self.p_d)
-        
-        self.v_norm = np.linalg.norm(self.v) + 1e-6  # evitar divisão por zero
-#        self.e_np = max(np.dot(self.e_p.T, self.v) / self.v_norm, 0)
-
-        if np.linalg.norm(self.v) > 0.05:  # só acumular erro projetado se o barco está a andar
-            self.e_np = max(np.dot(self.e_p.T, self.v) / (np.linalg.norm(self.v) + 1e-6), 0)
-        else:
-            self.e_np = 0.0
+    
+        # Referência: linha reta desde a posição inicial, na direção do yaw inicial
+        # self.psi_d = self.initial_yaw
+        # self.v_d = np.array([1.0, 0.0])
+        # self.p_d = np.array([self.initial_x, self.initial_y])
+    
+        # Matrizes de rotação
+        self.J = np.array([[np.cos(self.psi), -np.sin(self.psi)],
+                           [np.sin(self.psi),  np.cos(self.psi)]])
+        self.J_d = np.array([[np.cos(self.psi_d), -np.sin(self.psi_d)],
+                             [np.sin(self.psi_d),  np.cos(self.psi_d)]])
+    
+        # Erro de posição no referencial desejado
+        self.e_p = np.dot(self.J_d.T, self.p - self.p_d)
+    
+        # Avanço ao longo da linha (não truncado)
+        self.e_np = np.dot(self.e_p.T, self.v) / (np.linalg.norm(self.v) + 1e-6)
 
 
-        
-        self.ie_np += self.e_np * dt
-        #self.ie_np = np.clip(self.ie_np, -10.0, 10.0)
-
-
-        self.e_dp_aux = self.e_p / np.linalg.norm(self.e_p + 1e-6)
-        self.e_dp = self.e_dp_aux[1]
-        
-        self.e_V = np.dot(self.Jd2d.T, np.dot(self.J2d, self.v - self.v_d))
+    
+        # Erro lateral direto
+        self.e_dp = self.e_p[1]
+    
+        # Erro de velocidade
+        v_rel = self.v - self.v_d
+        self.e_V = np.dot(self.J_d.T, np.dot(self.J, v_rel))
         self.e_Va = self.e_V[0]
+        self.e_dv = self.e_V[1]
+    
+        # Heading
+        self.e_yaw = np.arctan2(np.sin(self.psi_d - self.psi),
+                                np.cos(self.psi_d - self.psi))
+        self.e_om = -self.yaw_rate
 
-        # Acumular integral (precisas inicializar self.ie_Va antes no __init__)
+            
+        self.ie_np += self.e_np * dt
         self.ie_Va += self.e_Va * dt
-        #self.ie_Va = np.clip(self.ie_Va, -10.0, 10.0)
+        self.ie_np = np.clip(self.ie_np, -5.0, 5.0)
+        self.ie_Va = np.clip(self.ie_Va, -2.0, 2.0)
+
+
         
-        self.e_yaw = self.initial_yaw - self.yaw
-        self.e_yaw = np.arctan2(np.sin(self.e_yaw), np.cos(self.e_yaw))  # normalizar para [-pi, pi]
-        self.e_om = -self.yaw_rate  # erro de yaw rate (referência = 0)    
+        
+        
+        
+        
+        
+        
+        
+        
+    
 
 
-    def save_debug(self,motor_value, rudder_value):
+    def save_debug(self, motor_value, rudder_value):
         
         
         self.debug_log["time"].append(self.get_clock().now().nanoseconds / 1e9)
@@ -422,6 +504,15 @@ class GlassyChallenge(Node):
         self.debug_log["ie_np"].append(self.ie_np)
         self.debug_log["e_Va"].append(self.e_Va)
         self.debug_log["ie_Va"].append(self.ie_Va)
+        
+        self.debug_log["e_yaw"].append(self.e_yaw)
+        self.debug_log["e_om"].append(self.e_om)
+        self.debug_log["e_dp"].append(self.e_dp)
+        self.debug_log["e_dv"].append(self.e_dv)
+        
+        
+
+        
         self.debug_log["motor_value"].append(motor_value)
         self.debug_log["rudder_value"].append(rudder_value)
         self.debug_log["surge"].append(self.surge)
@@ -433,7 +524,92 @@ class GlassyChallenge(Node):
         sio.savemat("/home/diogo/Documents/GitHub/TeseGlassy/debug.mat", self.debug_log)
         self.get_logger().info("Debug data saved")
             
+        
+        
+        
+    def publish_reference_line(self, length=200.0):
+        """
+        Desenha uma linha de 'length' metros a partir da posição inicial
+        seguindo o yaw inicial.
+        """
+        # extremos da linha no plano NED
+        x0, y0 = self.initial_x, self.initial_y
+        x1 = x0 + length * math.cos(self.initial_yaw)
+        y1 = y0 + length * math.sin(self.initial_yaw)
     
+        m = Marker()
+        m.header.frame_id = 'world'          # ou 'map', consoante a tua world
+        m.header.stamp    = self.get_clock().now().to_msg()
+        m.ns   = 'guideline'
+        m.id   = 0
+        m.type = Marker.LINE_STRIP
+        m.action = Marker.ADD
+        m.scale.x = 0.05                     # espessura da “linha” em metros
+        m.color.r, m.color.g, m.color.b, m.color.a = 1.0, 0.0, 0.0, 1.0  # vermelho
+    
+        m.points = [Point(x=x0, y=y0, z=0.0),
+                    Point(x=x1, y=y1, z=0.0)]
+    
+        # Publica algumas vezes para garantir que o Gazebo/SDF apanha
+        for _ in range(3):
+            self.marker_pub.publish(m)
+
+
+
+
+
+    def update_reference(self, t_now: float,  ref_mode) -> None:
+        """
+        Parameters
+        ----------
+        t_now    : float   tempo absoluto [s] (usa current_time)
+        ref_mode : int     1 = linha recta   |   2 = círculo
+        
+        Actualiza:
+            • self.p_d   (posição desejada [x, y] inercial)
+            • self.v_d   (velocidade desejada [u, v] no body-frame)
+            • self.psi_d (rumo desejado)
+        """
+    
+        # tempo desde o arranque da missão
+        tau = t_now - self.mission_start_time          # [s]
+    
+        # ------------- 1 · Linha recta ---------------------------------------
+        if ref_mode == 1:
+            v_ref = 1.0                                # m/s
+            self.p_d = np.array([
+                self.initial_x + v_ref * tau * np.cos(self.initial_yaw),
+                self.initial_y + v_ref * tau * np.sin(self.initial_yaw)
+            ])
+            self.v_d  = np.array([v_ref, 0.0])         # já no body
+            self.psi_d = self.initial_yaw
+            return                                     # <─ rápido
+    
+        # ------------- 2 · Círculo ------------------------------------------
+        Rad = 6.0               # raio [m]
+        omn = 2*np.pi/20        # rad/s  (1 volta em 20 s)
+    
+        # posição inercial
+        x_n =  Rad * np.cos(omn * tau)
+        y_n =  Rad * np.sin(omn * tau)
+        self.p_d = np.array([self.initial_x + x_n,
+                             self.initial_y + y_n])
+    
+        # velocidade inercial
+        u_n = -Rad * omn * np.sin(omn * tau)
+        v_n =  Rad * omn * np.cos(omn * tau)
+    
+        # rumo desejado = tangente ao círculo
+        self.psi_d = np.arctan2(v_n, u_n)
+    
+        # rotação NED → body (transposta de R_bn)
+        R_nb_T = np.array([[ np.cos(self.psi_d),  np.sin(self.psi_d)],
+                           [-np.sin(self.psi_d),  np.cos(self.psi_d)]])
+    
+        v_body = R_nb_T @ np.array([u_n, v_n])
+        self.v_d = v_body          # [surge_ref, sway_ref]
+    
+        
 
 def main(args=None):
     rclpy.init(args=args)
