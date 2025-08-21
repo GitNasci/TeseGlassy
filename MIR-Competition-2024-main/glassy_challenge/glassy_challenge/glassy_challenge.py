@@ -94,6 +94,8 @@ class GlassyChallenge(Node):
         self.mission_start_time=0
         
         self.dt_aux=0
+        self.om_d = 0.0  # yaw-rate desejado (feed-forward)
+
 
 
 
@@ -164,7 +166,11 @@ class GlassyChallenge(Node):
             "motor_value": [],
             "rudder_value": [],
             "surge": [],
-            "yaw": []}
+            "yaw": [],
+            "u_d": [], 
+            "om_d": []
+            
+            }
                 
     
 
@@ -369,12 +375,17 @@ class GlassyChallenge(Node):
 
         # # Fill these values in please (motor should be between [0,1]) (max thrust is reduced, to avoid accidents)
         #n_norm = (-self.kp_n * e_np - self.kpi_n * ie_np  - self.kV_n * e_Va - self.kVi_n * ie_Va)
+        
+        
+        
+        u_d = np.linalg.norm(self.v_d)   # ≈ R*omn no círculo (~1.88 m/s)
+        kff = 0.45
 
         #motor_value = np.clip(n_norm, 0.0, 1.0)
-        n_norm = -( self.kp_n  * self.e_np
-                 + self.kpi_n * self.ie_np
-                 + self.kV_n  * self.e_Va
-                 + self.kVi_n * self.ie_Va )        
+        n_norm = kff*u_d-( self.kp_n  * self.e_np
+                 + self.kpi_n * self.ie_np)
+                 #+ self.kV_n  * self.e_Va
+                 # self.kVi_n * self.ie_Va )        
         
         motor_value = np.clip(n_norm, 0.00, 1.0)
                 
@@ -396,7 +407,7 @@ class GlassyChallenge(Node):
                       - self.kdp_delta * self.e_dp
                       - self.kdv_delta * self.e_dv)
         
-        rudder_value= np.clip(delta_norm * self.delta_max, -1.0, 1.0)
+        rudder_value = np.clip(delta_norm, -1.0, 1.0)  # sem * self.delta_max
         
         self.get_logger().info(
         f"delta_norm = -({self.kyaw_delta} * {self.e_yaw:.3f}) "
@@ -436,7 +447,7 @@ class GlassyChallenge(Node):
     def define_states(self, dt):
         
         current_time = self.get_clock().now().nanoseconds * 1e-9
-        self.update_reference(current_time, ref_mode=2)   # 1: linha, 2: círculo
+        self.update_reference(current_time, ref_mode=1)   # 1: linha, 2: círculo
 
         
         # Estado atual
@@ -459,8 +470,8 @@ class GlassyChallenge(Node):
         self.e_p = np.dot(self.J_d.T, self.p - self.p_d)
     
         # Avanço ao longo da linha (não truncado)
-        self.e_np = np.dot(self.e_p.T, self.v) / (np.linalg.norm(self.v) + 1e-6)
-
+        #self.e_np = np.dot(self.e_p.T, self.v) / (np.linalg.norm(self.v) + 1e-6)
+        self.e_np = self.e_p[0]  # along-track no frame desejado
 
     
         # Erro lateral direto
@@ -475,7 +486,9 @@ class GlassyChallenge(Node):
         # Heading
         self.e_yaw = np.arctan2(np.sin(self.psi_d - self.psi),
                                 np.cos(self.psi_d - self.psi))
-        self.e_om = -self.yaw_rate
+        
+        # self.e_om = -self.yaw_rate
+        self.e_om =self.om_d -self.yaw_rate
 
             
         self.ie_np += self.e_np * dt
@@ -510,13 +523,14 @@ class GlassyChallenge(Node):
         self.debug_log["e_dp"].append(self.e_dp)
         self.debug_log["e_dv"].append(self.e_dv)
         
-        
-
-        
         self.debug_log["motor_value"].append(motor_value)
         self.debug_log["rudder_value"].append(rudder_value)
         self.debug_log["surge"].append(self.surge)
         self.debug_log["yaw"].append(self.yaw)
+        
+        self.debug_log["u_d"].append(np.linalg.norm(self.v_d))
+        self.debug_log["om_d"].append(self.om_d)
+
         
         
         
@@ -583,11 +597,13 @@ class GlassyChallenge(Node):
             ])
             self.v_d  = np.array([v_ref, 0.0])         # já no body
             self.psi_d = self.initial_yaw
+            self.om_d  = 0.0                     
             return                                     # <─ rápido
     
         # ------------- 2 · Círculo ------------------------------------------
         Rad = 6.0               # raio [m]
         omn = 2*np.pi/20        # rad/s  (1 volta em 20 s)
+        self.om_d = omn
     
         # posição inercial
         x_n =  Rad * np.cos(omn * tau)
@@ -608,6 +624,8 @@ class GlassyChallenge(Node):
     
         v_body = R_nb_T @ np.array([u_n, v_n])
         self.v_d = v_body          # [surge_ref, sway_ref]
+        
+
     
         
 
