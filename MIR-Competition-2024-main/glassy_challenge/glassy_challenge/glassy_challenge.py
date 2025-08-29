@@ -96,8 +96,14 @@ class GlassyChallenge(Node):
         self.dt_aux=0
         self.om_d = 0.0  # yaw-rate desejado (feed-forward)
 
-
-
+        # anti-windup / limites por iteração
+        self.Imax_Va  = 2.0
+        self.Istep_Va = 0.05
+        self.motor_prev     = 0.0
+        self.max_motor_step = 0.08
+        
+        self.e_u = 0.0
+        self.ie_u = 0.0
 
 
 
@@ -139,16 +145,18 @@ class GlassyChallenge(Node):
 
     	#Gains for nonlinear controller TBD
         #direction
-        self.kyaw_delta = 2; 
-        self.kom_delta = 1;   
-        self.kdp_delta = 1;     	
-        self.kdv_delta = 0;   
+        self.kyaw_delta = 0.8    # ↓
+        self.kom_delta  = 2.0    # ↑ segue ωd com menos erro acumulado
+        self.kdp_delta  = 0.7
+        self.kdv_delta  = 0.6    # ↑ damping lateral
+        self.max_rudder_step = 0.08  # rate-limit mais apertado
+        self.rudder_prev=0
     	
-    	#surge
-        self.kp_n = 3.0;  
-        self.kpi_n = 0.600; 
-        self.kV_n = 12.0;  
-        self.kVi_n = 2; 
+    	# ---- motor (PI de velocidade) ----
+        self.kp_n  = 0.0     # NÃO usar along-track no motor
+        self.kpi_n = 0.0
+        self.kV_n  = 4.0     # P da velocidade
+        self.kVi_n = 2.0     # I da velocidade
 
         #rudder
         self.delta_max = 60*math.pi/180;
@@ -286,65 +294,6 @@ class GlassyChallenge(Node):
         Implement the controller for the challenge here.
         (it will run at 30Hz)
         # """
-        #     # A) dt
-        # now = self.get_clock().now().nanoseconds * 1e-9
-        # dt  = max(now - self.time_prev, 1e-3)
-        # self.time_prev = now
-    
-        # # B) Actualizar estados/erros
-        # self.define_states(dt)
-    
-        # # C) LOS: rumo de referência
-        # L       = 3.0               # look-ahead [m]
-        # k_cte   = 1.0
-        # psi_ref = self.initial_yaw + math.atan2(-k_cte*self.e_dp, L)
-    
-        # # D) PID de rumo → rudder
-        # e_psi = math.atan2(math.sin(psi_ref - self.yaw),
-        #                    math.cos(psi_ref - self.yaw))
-        # self.int_e_psi += e_psi * dt
-        # kp_psi, ki_psi, kd_psi = 4.0, 0.5, 0.8
-        # delta_cmd = kp_psi*e_psi + ki_psi*self.int_e_psi - kd_psi*self.yaw_rate
-    
-        # delta_max_rad = 60*math.pi/180
-        # rudder_value  = np.clip(delta_cmd / delta_max_rad, -1.0, 1.0)
-    
-        # # E) PID de velocidade → motor
-        # u_ref = 1.2                                   # m/s
-        # e_u   = u_ref - self.surge
-        # self.int_e_u += e_u * dt
-        # kp_u, ki_u = 3.0, 0.8
-        # n_cmd = kp_u*e_u + ki_u*self.int_e_u
-        # motor_value = np.clip(n_cmd, 0.0, 1.0)
-    
-        # # F) Publicar e registar
-        # self.save_debug(motor_value, rudder_value)
-        # self.publish_actuators(motor_value, rudder_value)
-        
-        # Implement your controller here 
-        # You can use the variables self.yaw, self.yaw_rate, self.surge, self.sway, self.x, self.y (only a subset of these is actually needed)
-        # You also have access to the initial position and yaw (self.initial_x, self.initial_y, self.initial_yaw)
-        # You can also use the libraries numpy and scipy
-        # You can add more variables to the class to keep for example the previous errors/error integral,...
-        # Please do not overcomplicate, the challenge is simple (~ 20 lines of code should be enough).
-        # Please, use this function and if you need, add variables to the class constructor, do not change ANY other function.
-
-        # Variables available, and corresponding units:
-        # yaw -> [-pi, pi] (rad)
-        # yaw_rate (rad/s)
-        # surge (m/s)
-        # sway (m/s)
-        # x, y (m)
-
-        # You also have access to the initial yaw, and position:
-        # initial_yaw [-pi, pi] (rad)
-        # initial_x, initial_y (m)
-        
-        # self.get_logger().info('Surge: ' + str(self.surge) )
-        # self.get_logger().info('Sway: ' + str(self.sway) )
-        # self.get_logger().info('Yaw: ' + str(self.yaw) )
-        
-        
 
         
         current_time = self.get_clock().now().nanoseconds/1e9
@@ -356,36 +305,103 @@ class GlassyChallenge(Node):
         
         self.define_states(dt)
 
-        # #********************************************************************************
-        # #
-        # #
-        # #
-        # #
-        # #                            YOUR CALCULATIONS GO HERE
-        # #                                   GOOD LUCK!
-        # #
-        # #
-        # #
-        # #
-        # #
-        # #*********************************************************************************
+        
+        
+        
+                # ---- FF + PI de velocidade (com erro de surge e_u) ----
+        kff = 0.48            # 0.46–0.50
+        KP  = 4.0             # self.kV_n   (se preferires manter nomes)
+        KI  = 2.0             # self.kVi_n
+        
+        cmd = kff*self.u_d_mag - KP*self.e_u - KI*self.ie_u
+        motor_raw = np.clip(cmd, 0.0, 1.0)
+        
+        # anti-windup: integra só se NÃO empurra a saturação
+        sat_up   = motor_raw >= 0.999
+        sat_down = motor_raw <= 0.001
+        push     = -KP*self.e_u
+        
+        if not ((sat_up and push > 0) or (sat_down and push < 0)):
+            # limite de passo por iteração (independente do dt “perfeito”)
+            delta_ie = np.clip(self.e_u * dt, -0.05, 0.05)
+            self.ie_u = np.clip(self.ie_u + delta_ie, -2.0, 2.0)
+        
+        # rate-limit por iteração (suaviza sem depender do dt)
+        if not hasattr(self, "motor_prev"): self.motor_prev = 0.0
+        dm = np.clip(motor_raw - self.motor_prev, -0.08, 0.08)
+        motor_value = np.clip(self.motor_prev + dm, 0.0, 1.0)
+        self.motor_prev = motor_value
 
+                
+        self.get_logger().info(
+        f"n_norm = -({self.kp_n} * {self.e_np:.3f}) "
+        f"- ({self.kpi_n} * {self.ie_np:.3f}) "
+        f"- ({self.kV_n} * {self.e_Va:.3f}) "
+        f"- ({self.kVi_n} * {self.ie_Va:.3f}) = {dm:.3f}"
+        f"motor_value= {motor_value:.3f}"
+        )
 
-        # # After finishing your calculations, fill the following variables with the values you want to publish, and thats it, you are done.
+        
+        
+        
+        # # Fill (rudder should be between [-1,1])
+        
+        delta_norm = ( self.kyaw_delta * self.e_yaw
+             + self.kom_delta  * self.e_om
+             - self.kdp_delta  * self.e_dp
+             - self.kdv_delta  * self.e_dv )
 
-        # # Fill these values in please (motor should be between [0,1]) (max thrust is reduced, to avoid accidents)
-        #n_norm = (-self.kp_n * e_np - self.kpi_n * ie_np  - self.kV_n * e_Va - self.kVi_n * ie_Va)
+        # compressão suave (evita “murro” no ±1); g=0.8–1.2
+        g = 1.0
+        rudder_raw = np.tanh(g * delta_norm)            # ∈ (-1,1)
+        
+        # rate-limit por iteração
+        if not hasattr(self, "rudder_prev"): self.rudder_prev = 0.0
+        dr = np.clip(rudder_raw - self.rudder_prev, -0.08, 0.08)   # mais apertado
+        rudder_value = np.clip(self.rudder_prev + dr, -1.0, 1.0)
+        self.rudder_prev = rudder_value
+        
+        self.get_logger().info(
+        f"delta_norm = -({self.kyaw_delta} * {self.e_yaw:.3f}) "
+        f"- ({self.kom_delta} * {self.e_om:.3f}) "
+        f"- ({self.kdp_delta} * {self.e_dp:.3f}) "
+        f"- ({self.kdv_delta} * {self.e_dv:.3f}) = {delta_norm:.3f}"
+        f"rudder_value= {rudder_value:.3f}"
+        )
+        
+    
+        
+        self.save_debug(motor_value,rudder_value)
+    
+        self.publish_actuators(motor_value, rudder_value)
+
+    #def myChallengeController(self):   last best version
+        """
+        Implement the controller for the challenge here.
+        (it will run at 30Hz)
+        # """
+
+        
+        current_time = self.get_clock().now().nanoseconds/1e9
+        dt = (current_time - self.time_prev)
+        
+        self.time_prev=current_time
+        self.dt_aux=dt
+        
+        
+        self.define_states(dt)
+
         
         
         
         u_d = np.linalg.norm(self.v_d)   # ≈ R*omn no círculo (~1.88 m/s)
-        kff = 0.45
+        kff = 0.60
 
         #motor_value = np.clip(n_norm, 0.0, 1.0)
         n_norm = kff*u_d-( self.kp_n  * self.e_np
-                 + self.kpi_n * self.ie_np)
-                 #+ self.kV_n  * self.e_Va
-                 # self.kVi_n * self.ie_Va )        
+                 + self.kpi_n * self.ie_np
+                 + self.kV_n  * self.e_Va
+                 + self.kVi_n * self.ie_Va )        
         
         motor_value = np.clip(n_norm, 0.00, 1.0)
                 
@@ -423,9 +439,7 @@ class GlassyChallenge(Node):
     
         self.publish_actuators(motor_value, rudder_value)
 
-
-
-    #
+    
     def publish_actuators(self, motor_value, rudder_value):
         """
         Takes the motor and rudder values. Clips and publishes them.
@@ -447,7 +461,7 @@ class GlassyChallenge(Node):
     def define_states(self, dt):
         
         current_time = self.get_clock().now().nanoseconds * 1e-9
-        self.update_reference(current_time, ref_mode=1)   # 1: linha, 2: círculo
+        self.update_reference(current_time, ref_mode=2)   # 1: linha, 2: círculo
 
         
         # Estado atual
@@ -483,18 +497,26 @@ class GlassyChallenge(Node):
         self.e_Va = self.e_V[0]
         self.e_dv = self.e_V[1]
     
-        # Heading
-        self.e_yaw = np.arctan2(np.sin(self.psi_d - self.psi),
-                                np.cos(self.psi_d - self.psi))
+        # erro de rumo pelo menor arco
+        dpsi = self.psi_d - self.psi
+        e_yaw = np.arctan2(np.sin(dpsi), np.cos(dpsi))  # wrap em [-pi, pi]
+        
+        # limitar a magnitude do erro de rumo (evita “viragens de 180°”)
+        yaw_lim = np.deg2rad(80.0)                      # 60–90° é típico
+        self.e_yaw = yaw_lim * np.tanh(e_yaw / yaw_lim) # mais suave que clip
         
         # self.e_om = -self.yaw_rate
         self.e_om =self.om_d -self.yaw_rate
 
             
         self.ie_np += self.e_np * dt
-        self.ie_Va += self.e_Va * dt
+        #self.ie_Va += self.e_Va * dt
         self.ie_np = np.clip(self.ie_np, -5.0, 5.0)
-        self.ie_Va = np.clip(self.ie_Va, -2.0, 2.0)
+        #self.ie_Va = np.clip(self.ie_Va, -2.0, 2.0)
+        
+        self.u_d_mag = float(np.linalg.norm(self.v_d))   # ≈ R*omn (constante no círculo)
+        self.e_u     = self.u_d_mag - self.surge        # erro “limpo” de velocidade
+
 
 
         
