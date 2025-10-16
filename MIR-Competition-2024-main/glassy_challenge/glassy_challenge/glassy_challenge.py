@@ -461,7 +461,7 @@ class GlassyChallenge(Node):
     def define_states(self, dt):
         
         current_time = self.get_clock().now().nanoseconds * 1e-9
-        self.update_reference(current_time, ref_mode=2)   # 1: linha, 2: círculo
+        self.update_reference(current_time, ref_mode=1)   # 1: linha, 2: círculo
 
         
         # Estado atual
@@ -506,6 +506,7 @@ class GlassyChallenge(Node):
         self.e_yaw = yaw_lim * np.tanh(e_yaw / yaw_lim) # mais suave que clip
         
         # self.e_om = -self.yaw_rate
+        
         self.e_om =self.om_d -self.yaw_rate
 
             
@@ -623,7 +624,7 @@ class GlassyChallenge(Node):
             return                                     # <─ rápido
     
         # ------------- 2 · Círculo ------------------------------------------
-        Rad = 6.0               # raio [m]
+        Rad = 20.0               # raio [m]
         omn = 2*np.pi/20        # rad/s  (1 volta em 20 s)
         self.om_d = omn
     
