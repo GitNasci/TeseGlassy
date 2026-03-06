@@ -30,3 +30,6 @@ debugger
 ```
 
 The script loads the available `debug*.mat` files and generates the plots used for controller performance analysis.
+
+## NOTE
+Depending on your local setup, it may be necessary to **modify the path to the desired `.mat` file** at the beginning of the `debugger.m` script so that MATLAB loads the correct log file.
