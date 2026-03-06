@@ -1,0 +1,68 @@
+HW arch: PX4_FMU_V6X
+HW type: V6X
+HW FMUM ID: 0x008
+HW BASE ID: 0x000
+PX4 git-hash: 1dacb4cdef2d7145754fc788fa8dc482eed74b40
+PX4 version: Release 1.14.3 (17695743)
+OS: NuttX
+OS version: Release 11.0.0 (184549631)
+OS git-hash: de41e7feaeffaec3ce65327e9569e8fdb553ca3d
+Build datetime: May 30 2024 03:33:40
+Build uri: localhost
+Build variant: default
+Toolchain: GNU GCC, 9.3.1 20200408 (release)
+PX4GUID: 000600000000393238343033510700220034
+MCU: STM32H7[4|5]xxx, rev. V
+INFO  [param] selected parameter default file /fs/mtd_params
+INFO  [param] importing from '/fs/mtd_params'
+ERROR [parameters] BSON document size (0) doesn't match bytes decoded (5)
+ERROR [parameters] BSON document size (0) doesn't match bytes decoded (5)
+ERROR [parameters] BSON document size (0) doesn't match bytes decoded (5)
+ERROR [param] importing from '/fs/mtd_params' failed (-1)
+ERROR [init] param import failed
+[bsondump] reading from /fs/mtd_params
+BSON document size 0
+BSON_EOO
+BSON decoded 5 bytes (double:0, string:0, bin:0, bool:0, int32:0, int64:0)
+INFO  [parameters] summary: 0/1766 (used/total)
+INFO  [parameters] file: /fs/mtd_params
+INFO  [parameters] auto save: on
+param: export: 0 events, 0us elapsed, 0.00us avg, min 0us max 0us 0.000us rms
+param: find: 0 events
+param: get: 0 events
+param: set: 0 events, 0us elapsed, 0.00us avg, min 0us max 0us 0.000us rms
+dmesg [87:100]
+HW arch: PX4_FMU_V6X
+HW type: V6X
+HW FMUM ID: 0x008
+HW BASE ID: 0x000
+PX4 git-hash: 1dacb4cdef2d7145754fc788fa8dc482eed74b40
+PX4 version: Release 1.14.3 (17695743)
+OS: NuttX
+OS version: Release 11.0.0 (184549631)
+OS git-hash: de41e7feaeffaec3ce65327e9569e8fdb553ca3d
+Build datetime: May 30 2024 03:33:40
+Build uri: localhost
+Build variant: default
+Toolchain: GNU GCC, 9.3.1 20200408 (release)
+PX4GUID: 000600000000393238343033510700220034
+MCU: STM32H7[4|5]xxx, rev. V
+INFO  [param] selected parameter default file /fs/mtd_params
+INFO  [param] importing from '/fs/mtd_params'
+ERROR [parameters] BSON document size (0) doesn't match bytes decoded (5)
+ERROR [parameters] BSON document size (0) doesn't match bytes decoded (5)
+ERROR [parameters] BSON document size (0) doesn't match bytes decoded (5)
+ERROR [param] importing from '/fs/mtd_params' failed (-1)
+ERROR [init] param import failed
+[bsondump] reading from /fs/mtd_params
+BSON document size 0
+BSON_EOO
+BSON decoded 5 bytes (double:0, string:0, bin:0, bool:0, int32:0, int64:0)
+INFO  [parameters] summary: 0/1766 (used/total)
+INFO  [parameters] file: /fs/mtd_params
+INFO  [parameters] auto save: on
+param: export: 0 events, 0us elapsed, 0.00us avg, min 0us max 0us 0.000us rms
+param: find: 0 events
+param: get: 0 events
+param: set: 0 events, 0us elapsed, 0.00us avg, min 0us max 0us 0.000us rms
+dmesg [87:100]
