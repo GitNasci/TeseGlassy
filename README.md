@@ -15,18 +15,18 @@ The project focuses on the development and validation of a trajectory tracking c
 ```
 .
 ├── Boat Consumption Test
-│   └── Scripts and logs used to estimate propulsion power consumption of the USV platform
+│   └── Experimental logs and scripts used to estimate propulsion
+│       power consumption of the USV platform.
 │
 ├── Control
-│   └── Control algorithms and analysis scripts used in MATLAB for
-│       model-in-the-loop validation and debugging
+│   └── Gazebo closed-loop controller experiments and validation tests.
 │
 ├── MIR-Competition-2024-main
-│   └── ROS2 implementation of the controller used in the PX4/Gazebo
-│       simulation stack (including the glassy_challenge node)
+│   └── ROS2 implementation of the USV controller used with the
+│       PX4 + Gazebo simulation stack (includes the glassy_challenge node).
 │
-└── debug.mat
-    └── MATLAB data file used for debugging and controller analysis
+├── target-blast
+│   └── MATLAB simulations and experiments used for controller validation (Model-in-the-Loop tests).
 ```
 
 ---
