@@ -1,8 +1,8 @@
-# Efficient Autonomous USV – Control and Energy Experiments
+# MODELING AND CONTROL OF AN AUTONOMOUS SURFACE VESSEL WITH SOLAR ENERGY RECHARGING
 
 This repository contains the control algorithms, simulation tools, and experimental scripts developed for the Master's dissertation:
 
-**“Efficient Autonomous Boat with Solar Energy Recharging”**  
+**“MODELING AND CONTROL OF AN AUTONOMOUS SURFACE VESSEL WITH SOLAR ENERGY RECHARGING”**  
 MSc in Electrical and Computer Engineering  
 NOVA School of Science and Technology – NOVA University Lisbon
 
