@@ -150,10 +150,10 @@ class GlassyChallenge(Node):
         self.kdv_delta = 0;   
     	
     	#surge
-        self.kp_n = 3.0;  
-        self.kpi_n = 0.600; 
-        self.kV_n = 12.0;  
-        self.kVi_n = 2; 
+        self.kp_n = 0.80;  
+        self.kpi_n = 0.0200; 
+        self.kV_n = 1.6;  
+        self.kVi_n = .03; 
 
         #rudder
         self.delta_max = 60*math.pi/180;
@@ -462,7 +462,7 @@ class GlassyChallenge(Node):
 
     def define_states(self, dt):
         current_time = self.get_clock().now().nanoseconds * 1e-9
-        # mantém: 1 = linha, 2 = círculo (estás a usar 2)
+        # mantém: 1 = linha, 2 = círculo 
         self.update_reference(current_time, ref_mode=1)
     
         # --- Estado atual ---
@@ -557,7 +557,7 @@ class GlassyChallenge(Node):
         
         
     def save_debug_to_mat(self):
-        sio.savemat("/home/diogo/Documents/GitHub/TeseGlassy/debug.mat", self.debug_log)
+        sio.savemat("/home/diogo/Documents/GitHub/TeseGlassy/Control/debug.mat", self.debug_log)
         self.get_logger().info("Debug data saved")
             
         
