@@ -62,3 +62,25 @@ P.T_p_max = 10; % 1.0 kgf
 Kf = 1;
 P.delta_max = 60*pi/180;
 P.Kdelta = pi*Kf/(2*P.delta_max);
+
+% Surge (u) - Foco na paragem mais eficiente
+P.a1 =  1.3315;  
+P.a2 = -0.6368  
+P.a3 =-0.0207  
+P.E_T =  0.0167;    
+P.u_0 =  1336.8636;   
+P.a4 = -0.1659;   
+
+
+% Sway (v) - Reduzir pequenas oscilações no final
+P.b1 = -0.7933; 
+P.b2 = -3.8424;   
+P.b3 = -0.001;  
+
+% Yaw (r) - Evitar oscilações finais e deixar mais preciso
+P.c1 =  1.8205;    
+P.c2 = -0.9805;   
+P.c3 = -1.1044;  
+P.c4 =  2.0113;   
+P.c5 = -1.5616;   
+P.c6 =  0.2833;

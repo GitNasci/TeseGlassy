@@ -15,7 +15,7 @@ P.nD = 1;         % number of boats
 
 % reference parameters
 P.ref_mode = 1; % reference: 1 - line reference; 2 - circle
-P.ctrl_mode = 0; % 0 - open loop; 1 - V and yaw PID control.
+P.ctrl_mode = 1;% 0 - open loop; 1 - V and yaw PID control.
 
 P.dh = 0.05;      % safety height difference between drones
 P.Rad = 0.5;      % radius of circle

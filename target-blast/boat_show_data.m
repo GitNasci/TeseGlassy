@@ -1,3 +1,4 @@
+
 % Project Capture
 % Bruno Guerreiro (bj.guerreiro@fct.unl.pt)
 % 
@@ -207,7 +208,41 @@ end
 hold off;
 grid on;
 ylabel('$$\delta(t)$$ [deg]');
+xlabel('$$t$$ [s]');
 print2pdf([imgs_folder filename '_act'],do_print);
+
+figure(104);
+subplot(311);
+plot(t,ctrl_aux{1}(7:8,:));
+hold on;
+for iD = 2:nD
+    plot(t,ctrl_aux{iD}(7:8,:));
+end
+hold off;
+grid on;
+legend('$$e_{V_a}$$','$$e_{iV_a}$$');
+title('Control errors');
+subplot(312);
+plot(t,ctrl_aux{1}(9:12,:));
+hold on;
+for iD = 2:nD
+    plot(t,ctrl_aux{iD}(9:12,:));
+end
+hold off;
+grid on;
+legend('$$e_{\psi}$$','$$e_{\omega}$$','$$e_{d_p}$$','$$e_{d_v}$$','$$e_{i\psi}$$');
+xlabel('$$t$$ [s]');
+subplot(313);
+plot(t,ctrl_aux{1}(1:4,:));
+hold on;
+for iD = 2:nD
+    plot(t,ctrl_aux{iD}(1:4,:));
+end
+hold off;
+grid on;
+legend('$$e_{px}$$','$$e_{py}$$','$$e_{vx}$$','$$e_{vy}$$');
+xlabel('$$t$$ [s]');
+print2pdf([imgs_folder filename '_actaux'],do_print);
 
 if do_save_workspace
     save([saves_folder filename '.mat']);

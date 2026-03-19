@@ -1,7 +1,8 @@
 %function MPC = init_mpc(P)
 
-addpath('D:\Work\Research\Repositories\CasADi\casadi-3.6.3-windows64-matlab2018b')
+addpath('C:\tese\casadi-3.6.7-windows64-matlab2018b')
 import casadi.*
+MX.sym('test', 1)
 
 % M690B drone MPC controller definition
 % state

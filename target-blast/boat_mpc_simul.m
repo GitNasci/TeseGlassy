@@ -64,8 +64,6 @@ for k = 1:P.Nsim
     end
 end
 
-% simulation finished
-% fprintf('\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b');
 fprintf('\n t = Simulation: ');
 fprintf('%6.2f/%6.2f s\n',(k-1)*P.dTi,(P.Nsim-1)*P.dTi);
 fprintf('SIMULATION FINISHED.\n');

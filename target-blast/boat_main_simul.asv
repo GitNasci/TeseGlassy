@@ -24,7 +24,7 @@ for k = 1:P.Nsim
         [dot_eta,dot_nu] = boat_full_dyn(eta{iD}(:,k),nu{iD}(:,k),ctrl{iD}(:,k),Param);
         
         if iD<30 && k<10
-            %disp(nu{iD}(:, k));
+            disp(nu{iD}(:, k));
         end
         
         % discretization 
@@ -39,8 +39,8 @@ for k = 1:P.Nsim
                 break;
             end
         end
+    
     end
 end
 
 boat_show_data;
-M = post_metrics(t, eta, nu, ctrl, eta_ref, nu_ref, 'debug_from_matlab.mat');
